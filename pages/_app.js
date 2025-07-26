@@ -1,8 +1,5 @@
-<link rel="icon" type="image/png" href="/favicon.png" />
-import { GoogleAnalytics } from "nextjs-google-analytics";
-<GoogleAnalytics trackPageViews gaMeasurementId="G-2HJJZ64RYC" />
-
 import Head from 'next/head';
+import { GoogleAnalytics } from "nextjs-google-analytics";
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
@@ -16,6 +13,10 @@ function MyApp({ Component, pageProps }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.png" />
       </Head>
+
+      {/* ✅ Google Analytics Pageview Tracking */}
+      <GoogleAnalytics trackPageViews gaMeasurementId="G-2HJJZ64RYC" />
+
       <Component {...pageProps} />
     </>
   );
