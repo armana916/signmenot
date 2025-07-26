@@ -11,6 +11,7 @@
   "dependencies": {
     "formidable": "^3.5.4",
     "next": "15.4.4",
+    "nextjs-google-analytics": "^2.3.7",
     "pdf-parse": "^1.1.1",
     "react": "19.1.0",
     "react-dom": "19.1.0"

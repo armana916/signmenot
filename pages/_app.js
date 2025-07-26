@@ -1,4 +1,6 @@
 <link rel="icon" type="image/png" href="/favicon.png" />
+import { GoogleAnalytics } from "nextjs-google-analytics";
+<GoogleAnalytics trackPageViews gaMeasurementId="G-2HJJZ64RYC" />
 
 import Head from 'next/head';
 import '../styles/globals.css';
