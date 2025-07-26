@@ -1,3 +1,5 @@
+<link rel="icon" type="image/png" href="/favicon.png" />
+
 import { useState } from 'react';
 
 export default function Home() {
