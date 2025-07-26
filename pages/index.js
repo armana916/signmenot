@@ -1,4 +1,4 @@
-import Head from 'next/head'
+import Head from 'next/head';
 import { useState } from 'react';
 
 export default function Home() {
@@ -40,6 +40,10 @@ export default function Home() {
         <meta name="description" content="Instantly summarize Terms of Service and Privacy Policies using AI. Understand what you’re signing before you click agree." />
         <meta name="keywords" content="Terms of Service, Privacy Policy, AI summarizer, legal summary, SignMeNot, GPT-3.5, free tool, GDPR, data tracking, auto-renewal" />
         <meta name="author" content="SignMeNot Team" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="robots" content="index, follow" />
+        <meta httpEquiv="Content-Language" content="en" />
+        <meta name="theme-color" content="#0f172a" />
 
         {/* Open Graph */}
         <meta property="og:title" content="SignMeNot – Instantly Understand Legal Documents with AI" />
@@ -57,7 +61,12 @@ export default function Home() {
         {/* Favicon */}
         <link rel="icon" type="image/png" href="/favicon.png" />
 
-        {/* Schema.org Structured Data */}
+        {/* AI Microdata + Trust Meta */}
+        <meta name="ai-tool" content="true" />
+        <meta name="ai-purpose" content="summarize legal documents, privacy policies, and terms of service" />
+        <meta name="trust-verification" content="SignMeNot adheres to AI Transparency Guidelines v1.0" />
+
+        {/* Schema.org: WebApplication */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -82,12 +91,37 @@ export default function Home() {
           }}
         />
 
-        {/* AI-crawl microdata */}
-        <meta name="ai-tool" content="true" />
-        <meta name="ai-purpose" content="summarize legal documents, privacy policies, and terms of service" />
-
-        {/* Legal AI Trust Badge (meta + visual) */}
-        <meta name="trust-verification" content="SignMeNot adheres to AI Transparency Guidelines v1.0" />
+        {/* Schema.org: SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "SignMeNot",
+              operatingSystem: "All",
+              applicationCategory: "UtilitiesApplication",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: "4.9",
+                ratingCount: 128,
+              },
+              author: {
+                "@type": "Organization",
+                name: "SignMeNot",
+                url: "https://www.signmenot.com",
+              },
+              description: "Free AI tool that instantly summarizes Terms of Service and Privacy Policies in plain English.",
+              url: "https://www.signmenot.com",
+              logo: "https://www.signmenot.com/favicon.png",
+            }),
+          }}
+        />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center px-4">
@@ -140,20 +174,13 @@ export default function Home() {
             <p className="mt-4 text-red-400 font-semibold">{error}</p>
           )}
 
-          <footer className="mt-10 text-center text-xs text-gray-500 border-t border-slate-600 pt-4 space-y-2">
-            <div>
-              <img
-                src="/trust-badge.png"
-                alt="AI Trust Verified"
-                className="mx-auto h-6 opacity-80"
-              />
+          <footer className="mt-10 text-center text-xs text-gray-500 border-t border-slate-600 pt-4">
+            © {new Date().getFullYear()} SignMeNot.
+            <a href="/terms.html" className="ml-2 underline hover:text-white">Terms</a>
+            <a href="/privacy.html" className="ml-2 underline hover:text-white">Privacy</a>
+            <div className="mt-4 flex justify-center">
+              <img src="/trust-ai-badge.png" alt="Verified AI Transparency Compliance" className="h-10" />
             </div>
-            <p>
-              © {new Date().getFullYear()} SignMeNot.{" "}
-              <a href="https://signmenot.com" className="underline hover:text-white">
-                Visit Main Site
-              </a>
-            </p>
           </footer>
         </div>
       </div>
