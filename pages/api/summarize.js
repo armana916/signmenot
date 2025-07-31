@@ -1,66 +1,102 @@
-import { IncomingForm } from 'formidable';
-import fs from 'fs';
-import pdfParse from 'pdf-parse';
+// pages/index.jsx  (or pages/summarize.jsx)
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+import { useState } from 'react'
+import InterstitialAd from '../components/InterstitialAd'
 
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST allowed' });
+export default function SummarizePage() {
+  const [showAd, setShowAd] = useState(false)
+  const [pendingFormData, setPendingFormData] = useState(null)
+  const [summary, setSummary] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // Intercept form submission
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    setError('')
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
+    // Simple validation: need text or file
+    if (!formData.get('text')?.trim() && !formData.get('file')?.name) {
+      setError('Please paste text or upload a PDF first.')
+      return
+    }
+
+    setPendingFormData(formData)
+    setShowAd(true)
   }
 
-  const form = new IncomingForm();
+  // Called when "Continue to Summary" is clicked in the ad
+  const onAdFinish = async () => {
+    setShowAd(false)
+    setLoading(true)
+    setSummary('')
+    setError('')
 
-  form.parse(req, async (err, fields, files) => {
     try {
-      let inputText = fields.text?.[0] || '';
-
-      if (files.file?.[0]) {
-        const pdfBuffer = fs.readFileSync(files.file[0].filepath);
-        const parsed = await pdfParse(pdfBuffer);
-        inputText = parsed.text;
-      }
-
-      if (!inputText || inputText.trim().length === 0) {
-        return res.status(400).json({ error: 'No input provided' });
-      }
-
-      const prompt = `
-You are a privacy and legal expert. Summarize this legal document in plain English.
-Highlight any red flags like data selling, tracking, auto-renewals, or waiving rights.
-
-TEXT:
-${inputText}
-`;
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const res = await fetch('/api/summarize', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7,
-        }),
-      });
+        body: pendingFormData, // multipart/form-data automatically
+      })
 
-      const data = await response.json();
-
-      if (data.error) {
-        console.error('OpenAI API Error:', data.error);
-        return res.status(500).json({ error: data.error.message });
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to get summary')
       }
-
-      return res.status(200).json({ summary: data.choices[0].message.content });
-    } catch (error) {
-      console.error('🔥 Caught API Error:', error);
-      return res.status(500).json({ error: 'Something went wrong.' });
+      setSummary(data.summary)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  });
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-2xl font-semibold mb-4">Summarize Your Document</h1>
+
+      <form onSubmit={handleSubmit}>
+        <textarea
+          name="text"
+          className="w-full h-40 p-2 border rounded"
+          placeholder="Paste your Terms of Service or Privacy Policy here…"
+        />
+
+        <div className="my-4">
+          <label className="block mb-1">Or upload a PDF:</label>
+          <input
+            type="file"
+            name="file"
+            accept="application/pdf"
+            className="block"
+          />
+        </div>
+
+        {error && <p className="text-red-600 mb-2">{error}</p>}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition duration-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {loading ? 'Working…' : 'Summarize'}
+        </button>
+      </form>
+
+      {/* Interstitial Ad Overlay */}
+      {showAd && <InterstitialAd onFinish={onAdFinish} />}
+
+      {/* Loading state (optional, since ad is up) */}
+      {loading && !showAd && <p className="mt-4">Generating summary…</p>}
+
+      {/* Display result */}
+      {summary && (
+        <section className="mt-6 p-4 bg-gray-100 rounded">
+          <h2 className="text-xl font-semibold mb-2">AI-Generated Summary</h2>
+          <p className="whitespace-pre-wrap">{summary}</p>
+        </section>
+      )}
+    </div>
+  )
 }
