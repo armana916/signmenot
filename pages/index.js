@@ -1,5 +1,5 @@
 import Head from 'next/head';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Home() {
   const [text, setText] = useState('');
@@ -8,11 +8,26 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const stored = localStorage.getItem('signmenot-summary');
+    if (stored) setSummary(stored);
+  }, []);
+
+  useEffect(() => {
+    if (summary) localStorage.setItem('signmenot-summary', summary);
+  }, [summary]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setSummary('');
+
+    if (!text.trim() && !file) {
+      setError('Please paste text or upload a PDF file.');
+      setLoading(false);
+      return;
+    }
 
     const formData = new FormData();
     if (file) formData.append('file', file);
@@ -37,153 +52,94 @@ export default function Home() {
     <>
       <Head>
         <title>SignMeNot – AI Summarizer for Legal Documents</title>
-        <meta name="description" content="Instantly summarize Terms of Service and Privacy Policies using AI. Understand what you’re signing before you click agree." />
-        <meta name="keywords" content="Terms of Service, Privacy Policy, AI summarizer, legal summary, SignMeNot, GPT-3.5, free tool, GDPR, data tracking, auto-renewal" />
-        <meta name="author" content="SignMeNot Team" />
+        <meta name="description" content="Use AI to instantly summarize Privacy Policies and Terms of Service. Spot red flags, understand what you're agreeing to, and protect your data — free and fast." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
-        <meta httpEquiv="Content-Language" content="en" />
-        <meta name="theme-color" content="#0f172a" />
-
-        {/* Open Graph */}
-        <meta property="og:title" content="SignMeNot – Instantly Understand Legal Documents with AI" />
-        <meta property="og:description" content="Summarize legal terms, privacy policies, and ToS with a click. Built for trust and clarity." />
-        <meta property="og:image" content="https://www.signmenot.com/og-image.png" />
-        <meta property="og:url" content="https://www.signmenot.com/" />
-        <meta property="og:type" content="website" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="SignMeNot – AI-Powered Legal Summary Tool" />
-        <meta name="twitter:description" content="Don’t get trapped in legal jargon. SignMeNot gives you plain English summaries powered by GPT." />
-        <meta name="twitter:image" content="https://www.signmenot.com/og-image.png" />
-
-        {/* Favicon */}
-        <link rel="icon" type="image/png" href="/favicon.png" />
-
-        {/* AI Microdata + Trust Meta */}
-        <meta name="ai-tool" content="true" />
-        <meta name="ai-purpose" content="summarize legal documents, privacy policies, and terms of service" />
-        <meta name="trust-verification" content="SignMeNot adheres to AI Transparency Guidelines v1.0" />
-
-        {/* Schema.org: WebApplication */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "WebApplication",
-              name: "SignMeNot",
-              url: "https://www.signmenot.com",
-              description: "AI tool that summarizes privacy policies and terms of service in plain English.",
-              applicationCategory: "Utility",
-              operatingSystem: "All",
-              offers: {
-                "@type": "Offer",
-                price: "0.00",
-                priceCurrency: "USD",
-              },
-              creator: {
-                "@type": "Organization",
-                name: "SignMeNot",
-              },
-            }),
-          }}
-        />
-
-        {/* Schema.org: SoftwareApplication */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SoftwareApplication",
-              name: "SignMeNot",
-              operatingSystem: "All",
-              applicationCategory: "UtilitiesApplication",
-              offers: {
-                "@type": "Offer",
-                price: "0",
-                priceCurrency: "USD",
-              },
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: "4.9",
-                ratingCount: 128,
-              },
-              author: {
-                "@type": "Organization",
-                name: "SignMeNot",
-                url: "https://www.signmenot.com",
-              },
-              description: "Free AI tool that instantly summarizes Terms of Service and Privacy Policies in plain English.",
-              url: "https://www.signmenot.com",
-              logo: "https://www.signmenot.com/favicon.png",
-            }),
-          }}
-        />
+        <link rel="icon" href="/favicon.png" />
+        <link rel="canonical" href="https://www.signmenot.com/" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center px-4">
+      <main className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center px-4 py-10">
         <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-8 md:p-10 relative">
-          <div className="text-center mb-8">
-            <div className="text-5xl font-black text-blue-400 drop-shadow-md mb-2">🤖 SignMeNot</div>
-            <p className="text-gray-300 text-sm md:text-base">
-              AI that helps you understand terms and policies — instantly and clearly.
-            </p>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <header className="text-center mb-8">
+            <h1 className="text-5xl font-black text-blue-400 drop-shadow-md mb-2">
+              🤖 SignMeNot
+            </h1>
+            <h2 className="text-gray-300 text-sm md:text-base">
+              AI that helps you understand terms and policies — instantly and clearly.
+            </h2>
+          </header>
+
+          <form onSubmit={handleSubmit} className="space-y-5" aria-label="Summarization form">
+            <label htmlFor="tos-textarea" className="sr-only">Paste your terms or privacy policy</label>
             <textarea
+              id="tos-textarea"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Paste terms of service or privacy policy..."
+              aria-label="Terms input"
               className="w-full h-40 rounded-xl p-4 bg-slate-700 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
             />
 
             <div className="flex flex-col items-center space-y-3">
-              <label className="cursor-pointer inline-flex items-center px-6 py-3 bg-black text-white rounded-lg shadow hover:bg-gray-900">
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer inline-flex items-center px-6 py-3 bg-black text-white rounded-lg shadow hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 📁 Upload PDF
-                <input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  className="hidden"
-                />
               </label>
+              <input
+                id="file-upload"
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setFile(e.target.files[0])}
+                className="hidden"
+              />
               <div className="text-sm text-gray-400">or paste text above</div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition duration-200 disabled:opacity-50"
-              disabled={loading}
+              aria-disabled={loading || (!text && !file)}
+              disabled={loading || (!text && !file)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-3 rounded-xl shadow-lg transition duration-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {loading ? 'Summarizing...' : 'Summarize'}
+              {loading ? 'Summarizing…' : 'Summarize'}
             </button>
           </form>
 
           {summary && (
-            <div className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-white border border-slate-600">
-              <div className="text-blue-400 text-lg font-semibold mb-2">AI Summary:</div>
+            <section className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-white border border-slate-600" role="region" aria-live="polite">
+              <h3 className="text-blue-400 text-lg font-semibold mb-2">AI Summary:</h3>
               <p className="whitespace-pre-wrap leading-relaxed text-gray-200">{summary}</p>
-            </div>
+            </section>
           )}
 
           {error && (
-            <p className="mt-4 text-red-400 font-semibold">{error}</p>
+            <p className="mt-4 text-red-400 font-semibold" role="alert">{error}</p>
           )}
+
+          <section className="mt-10 text-left text-sm text-gray-300 space-y-4 border-t border-slate-600 pt-6">
+            <h3 className="text-white font-semibold text-lg">🔎 How It Works</h3>
+            <p>Paste any Terms of Service or Privacy Policy, or upload a PDF. Our AI instantly analyzes the document and provides a clear summary in plain English.</p>
+
+            <h3 className="text-white font-semibold text-lg">🧠 FAQ</h3>
+            <ul className="list-disc list-inside space-y-2">
+              <li><strong>Do you store my data?</strong> – No. Everything runs in memory and is deleted immediately after processing.</li>
+              <li><strong>What file types are supported?</strong> – Only PDFs for now. Text input also works.</li>
+              <li><strong>Is it free?</strong> – Yes, 100% free.</li>
+            </ul>
+          </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500 border-t border-slate-600 pt-4">
             © {new Date().getFullYear()} SignMeNot.
-            <a href="/terms.html" className="ml-2 underline hover:text-white">Terms</a>
-            <a href="/privacy.html" className="ml-2 underline hover:text-white">Privacy</a>
-            <div className="mt-4 flex justify-center">
-              <img src="/trust-ai-badge.png" alt="Verified AI Transparency Compliance" className="h-10" />
-            </div>
+            <a href="/terms" className="ml-2 underline hover:text-white">Terms</a>
+            <a href="/privacy" className="ml-2 underline hover:text-white">Privacy</a>
+            <a href="mailto:support@signmenot.com" className="ml-2 underline hover:text-white">Contact</a>
           </footer>
         </div>
-      </div>
+      </main>
     </>
   );
 }
