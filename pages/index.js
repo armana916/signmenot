@@ -1,5 +1,6 @@
 // pages/index.js
 
+import Image from 'next/image'
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import InterstitialAd from '../components/InterstitialAd';
@@ -84,13 +85,19 @@ export default function Home() {
         <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-8 md:p-10 relative">
 
           <header className="text-center mb-8">
-            <h1 className="text-5xl font-black text-blue-400 drop-shadow-md mb-2">
-              🤖 SignMeNot
-            </h1>
-            <h2 className="text-gray-300 text-sm md:text-base">
-              AI that helps you understand terms and policies — instantly and clearly.
-            </h2>
-          </header>
+  <div className="mx-auto mb-2 w-48 h-auto relative">
+    <Image
+      src="/logo.png"
+      alt="SignMeNot Logo"
+      fill
+      style={{ objectFit: 'contain' }}
+    />
+  </div>
+  <h2 className="text-gray-300 text-sm md:text-base">
+    AI that helps you understand terms and policies — instantly and clearly.
+  </h2>
+</header>
+
 
           {/* FORM */}
           <form
