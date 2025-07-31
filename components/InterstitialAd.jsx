@@ -27,7 +27,7 @@ export default function InterstitialAd({ onFinish }) {
           className="adsbygoogle block"
           style={{ display: 'block' }}
           data-ad-client="ca-pub-8348042440892802"
-          data-ad-slot="YOUR_AD_SLOT"
+          data-ad-slot="6731374319"
           data-ad-format="auto"
         ></ins>
 
