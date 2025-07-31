@@ -85,12 +85,13 @@ export default function Home() {
         <div className="bg-slate-800 rounded-3xl shadow-2xl w-full max-w-2xl p-8 md:p-10 relative">
 
           <header className="text-center mb-8">
-  <div className="mx-auto mb-2 w-48 h-auto relative">
+  <div className="flex justify-center mb-2">
     <Image
       src="/logo.png"
       alt="SignMeNot Logo"
-      fill
-      style={{ objectFit: 'contain' }}
+      width={200}
+      height={60}
+      objectFit="contain"
     />
   </div>
   <h2 className="text-gray-300 text-sm md:text-base">
