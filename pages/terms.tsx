@@ -59,6 +59,14 @@ export default function Terms() {
             </p>
           </article>
 
+          {/* Legal Disclaimer */}
+          <section className="mt-8">
+            <h2 className="text-xl font-semibold mb-2">Legal Disclaimer</h2>
+            <p className="mb-4 text-gray-400">
+              The AI-generated summaries provided by SignMeNot are for informational purposes only and do not constitute legal advice. Always consult a qualified attorney for advice specific to your situation.
+            </p>
+          </section>
+
           {/* Back Link */}
           <div className="mt-8">
             <Link href="/" className="inline-block text-blue-400 hover:text-blue-300 underline">
