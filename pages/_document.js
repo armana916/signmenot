@@ -12,6 +12,12 @@ export default function Document() {
         <meta property="og:image" content="https://signmenot.com/preview.png" />
         <meta property="og:url" content="https://signmenot.com" />
         <meta name="twitter:card" content="summary_large_image" />
+         {/* Google AdSense global script */}
+          <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8348042440892802"
+            crossOrigin="anonymous"
+          ></script>
       </Head>
       <body>
         <Main />
@@ -19,4 +25,5 @@ export default function Document() {
       </body>
     </Html>
   );
+  
 }
