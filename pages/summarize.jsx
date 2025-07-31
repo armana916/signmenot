@@ -1,6 +1,6 @@
 // pages/summarize.jsx
 import { useState } from 'react'
-import InterstitialAd from '@/components/InterstitialAd'
+import InterstitialAd from '../components/InterstitialAd'
 
 export default function SummarizePage() {
   const [showAd, setShowAd] = useState(false)
