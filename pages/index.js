@@ -1,12 +1,20 @@
+// pages/index.js
+
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
+import InterstitialAd from '../components/InterstitialAd';
 
 export default function Home() {
+  // your existing state
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // NEW: interstitial state
+  const [showAd, setShowAd] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('signmenot-summary');
@@ -17,26 +25,36 @@ export default function Home() {
     if (summary) localStorage.setItem('signmenot-summary', summary);
   }, [summary]);
 
-  const handleSubmit = async (e) => {
+  // UPDATED: intercept form submit to show ad
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setSummary('');
 
     if (!text.trim() && !file) {
       setError('Please paste text or upload a PDF file.');
-      setLoading(false);
       return;
     }
 
     const formData = new FormData();
     if (file) formData.append('file', file);
-    if (text.trim()) formData.append('text', text);
+    if (text.trim()) formData.append('text', text.trim());
+
+    setPendingFormData(formData);
+    setShowAd(true);
+  };
+
+  // NEW: called after ad “Continue” button
+  const onAdFinish = async () => {
+    setShowAd(false);
+    setLoading(true);
+    setError('');
+    setSummary('');
 
     try {
       const res = await fetch('/api/summarize', {
         method: 'POST',
-        body: formData,
+        body: pendingFormData,
       });
       const data = await res.json();
       if (data.error) setError(data.error);
@@ -52,7 +70,10 @@ export default function Home() {
     <>
       <Head>
         <title>SignMeNot – AI Summarizer for Legal Documents</title>
-        <meta name="description" content="Use AI to instantly summarize Privacy Policies and Terms of Service. Spot red flags, understand what you're agreeing to, and protect your data — free and fast." />
+        <meta
+          name="description"
+          content="Use AI to instantly summarize Privacy Policies and Terms of Service. Spot red flags, understand what you're agreeing to, and protect your data — free and fast."
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="index, follow" />
         <link rel="icon" href="/favicon.png" />
@@ -71,10 +92,18 @@ export default function Home() {
             </h2>
           </header>
 
-          <form onSubmit={handleSubmit} className="space-y-5" aria-label="Summarization form">
-            <label htmlFor="tos-textarea" className="sr-only">Paste your terms or privacy policy</label>
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-5"
+            aria-label="Summarization form"
+          >
+            <label htmlFor="tos-textarea" className="sr-only">
+              Paste your terms or privacy policy
+            </label>
             <textarea
               id="tos-textarea"
+              name="text"
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Paste terms of service or privacy policy..."
@@ -99,6 +128,12 @@ export default function Home() {
               <div className="text-sm text-gray-400">or paste text above</div>
             </div>
 
+            {error && (
+              <p className="text-red-400 font-semibold" role="alert">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
               aria-disabled={loading || (!text && !file)}
@@ -109,34 +144,64 @@ export default function Home() {
             </button>
           </form>
 
+          {/* NEW: Interstitial Ad Overlay */}
+          {showAd && <InterstitialAd onFinish={onAdFinish} />}
+
+          {/* SUMMARY */}
           {summary && (
-            <section className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-white border border-slate-600" role="region" aria-live="polite">
-              <h3 className="text-blue-400 text-lg font-semibold mb-2">AI Summary:</h3>
-              <p className="whitespace-pre-wrap leading-relaxed text-gray-200">{summary}</p>
+            <section
+              className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-white border border-slate-600"
+              role="region"
+              aria-live="polite"
+            >
+              <h3 className="text-blue-400 text-lg font-semibold mb-2">
+                AI Summary:
+              </h3>
+              <p className="whitespace-pre-wrap leading-relaxed text-gray-200">
+                {summary}
+              </p>
             </section>
           )}
 
-          {error && (
-            <p className="mt-4 text-red-400 font-semibold" role="alert">{error}</p>
-          )}
-
+          {/* FAQ & Footer (unchanged) */}
           <section className="mt-10 text-left text-sm text-gray-300 space-y-4 border-t border-slate-600 pt-6">
             <h3 className="text-white font-semibold text-lg">🔎 How It Works</h3>
-            <p>Paste any Terms of Service or Privacy Policy, or upload a PDF. Our AI instantly analyzes the document and provides a clear summary in plain English.</p>
+            <p>
+              Paste any Terms of Service or Privacy Policy, or upload a PDF.
+              Our AI instantly analyzes the document and provides a clear
+              summary in plain English.
+            </p>
 
             <h3 className="text-white font-semibold text-lg">🧠 FAQ</h3>
             <ul className="list-disc list-inside space-y-2">
-              <li><strong>Do you store my data?</strong> – No. Everything runs in memory and is deleted immediately after processing.</li>
-              <li><strong>What file types are supported?</strong> – Only PDFs for now. Text input also works.</li>
-              <li><strong>Is it free?</strong> – Yes, 100% free.</li>
+              <li>
+                <strong>Do you store my data?</strong> – No. Everything runs in
+                memory and is deleted immediately after processing.
+              </li>
+              <li>
+                <strong>What file types are supported?</strong> – Only PDFs for
+                now. Text input also works.
+              </li>
+              <li>
+                <strong>Is it free?</strong> – Yes, 100% free.
+              </li>
             </ul>
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500 border-t border-slate-600 pt-4">
             © {new Date().getFullYear()} SignMeNot.
-            <a href="/terms" className="ml-2 underline hover:text-white">Terms</a>
-            <a href="/privacy" className="ml-2 underline hover:text-white">Privacy</a>
-            <a href="mailto:support@signmenot.com" className="ml-2 underline hover:text-white">Contact</a>
+            <a href="/terms" className="ml-2 underline hover:text-white">
+              Terms
+            </a>
+            <a href="/privacy" className="ml-2 underline hover:text-white">
+              Privacy
+            </a>
+            <a
+              href="mailto:support@signmenot.com"
+              className="ml-2 underline hover:text-white"
+            >
+              Contact
+            </a>
           </footer>
         </div>
       </main>
