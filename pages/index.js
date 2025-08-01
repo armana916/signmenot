@@ -4,6 +4,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import InterstitialAd from '../components/InterstitialAd'
+import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   // Inputs

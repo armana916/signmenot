@@ -4,7 +4,6 @@ import Head from 'next/head'
 import '../styles/globals.css'
 
 import { GoogleAnalytics } from 'nextjs-google-analytics'
-import { Analytics } from '@vercel/analytics/'
 
 export default function MyApp({ Component, pageProps }) {
   return (
@@ -29,9 +28,6 @@ export default function MyApp({ Component, pageProps }) {
 
       {/* Your app’s pages */}
       <Component {...pageProps} />
-
-      {/* Vercel Analytics */}
-      <Analytics />
     </>
   )
 }

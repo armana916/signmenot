@@ -9,7 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
+    "cheerio": "^1.1.2",
     "formidable": "^3.5.4",
+    "mammoth": "^1.9.1",
     "next": "15.4.4",
     "next-translate": "^2.6.2",
     "nextjs-google-analytics": "^2.3.7",

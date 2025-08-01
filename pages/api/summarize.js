@@ -3,6 +3,7 @@
 import { IncomingForm } from 'formidable'
 import fs from 'fs'
 import pdfParse from 'pdf-parse'
+import cheerio from 'cheerio'
 
 export const config = {
   api: { bodyParser: false },
@@ -24,21 +25,57 @@ export default async function handler(req, res) {
       const { text } = JSON.parse(Buffer.concat(chunks).toString())
       inputText = text || ''
     } else if (contentType.startsWith('multipart/form-data')) {
-      // Form / file upload
+      // Handle URL, text, PDF, or DOCX
       inputText = await new Promise((resolve, reject) => {
         const form = new IncomingForm()
         form.parse(req, async (err, fields, files) => {
           if (err) return reject(err)
-          if (fields.text?.[0]) return resolve(fields.text[0])
-          if (files.file?.[0]) {
+
+          // Normalize fields to strings
+          const urlField = fields.url
+            ? Array.isArray(fields.url) ? fields.url[0] : fields.url
+            : null
+          const textField = fields.text
+            ? Array.isArray(fields.text) ? fields.text[0] : fields.text
+            : null
+
+          // 1) URL scraping
+          if (urlField) {
             try {
-              const buffer = fs.readFileSync(files.file[0].filepath)
-              const parsed = await pdfParse(buffer)
-              return resolve(parsed.text)
+              const resp = await fetch(urlField)
+              const html = await resp.text()
+              const $ = cheerio.load(html)
+              $('script, style, noscript, header, footer, nav').remove()
+              const text = $('body').text().replace(/\s+/g, ' ').trim()
+              return resolve(text)
             } catch (e) {
               return reject(e)
             }
           }
+
+          // 2) Plain text field
+          if (textField) {
+            return resolve(textField)
+          }
+
+          // 3) File upload: PDF or DOCX
+          if (files.file?.[0]) {
+            const { filepath, originalFilename } = files.file[0]
+            const buffer = fs.readFileSync(filepath)
+
+            if (originalFilename?.toLowerCase().endsWith('.pdf')) {
+              const parsed = await pdfParse(buffer)
+              return resolve(parsed.text)
+            }
+
+            if (originalFilename?.toLowerCase().endsWith('.docx')) {
+              const mammoth = await import('mammoth')
+              const { value: docText } = await mammoth.extractRawText({ buffer })
+              return resolve(docText)
+            }
+          }
+
+          // Nothing matched
           resolve('')
         })
       })
@@ -50,6 +87,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'No input provided' })
     }
 
+    // Build the prompt
     const prompt = `
 You are a privacy and legal expert. Summarize this legal document in plain English.
 Highlight any red flags like data selling, tracking, auto-renewals, or waiving rights.
@@ -58,6 +96,7 @@ TEXT:
 ${inputText}
 `
 
+    // Call OpenAI
     const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
