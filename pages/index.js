@@ -1,10 +1,6 @@
-// pages/index.js
-
 import Head from 'next/head'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import InterstitialAd from '../components/InterstitialAd'
-import { Analytics } from "@vercel/analytics/next"
 
 export default function Home() {
   // Inputs
@@ -16,10 +12,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Interstitial
-  const [showAd, setShowAd] = useState(false)
-  const [pendingFormData, setPendingFormData] = useState(null)
-
   // Persist last summary
   useEffect(() => {
     const stored = localStorage.getItem('signmenot-summary')
@@ -29,14 +21,27 @@ export default function Home() {
     if (summary) localStorage.setItem('signmenot-summary', summary)
   }, [summary])
 
-  // Show ad, then submit
-  const handleSubmit = (e) => {
+  // Push AdSense when summary appears
+  useEffect(() => {
+    if (summary && window.adsbygoogle) {
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({})
+      } catch (e) {
+        console.error('Adsense error', e)
+      }
+    }
+  }, [summary])
+
+  // Submit handler: direct call to API
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
     setSummary('')
 
     if (!file && !input.trim()) {
       setError('Please paste text/URL or upload a file.')
+      setLoading(false)
       return
     }
 
@@ -49,25 +54,16 @@ export default function Home() {
       else formData.append('text', v)
     }
 
-    setPendingFormData(formData)
-    setShowAd(true)
-  }
-
-  const onAdFinish = async () => {
-    setShowAd(false)
-    setLoading(true)
-    setError('')
-
     try {
       const res = await fetch('/api/summarize', {
         method: 'POST',
-        body: pendingFormData,
+        body: formData,
       })
       const data = await res.json()
-      if (data.error) setError(data.error)
-      else setSummary(data.summary)
-    } catch {
-      setError('Something went wrong.')
+      if (!res.ok) throw new Error(data.error || 'Failed to summarize')
+      setSummary(data.summary)
+    } catch (err) {
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -77,7 +73,15 @@ export default function Home() {
     <>
       <Head>
         <title>SignMeNot – AI Summarizer</title>
-        <meta name="description" content="Instant AI summaries of Terms, Privacy Policies, PDFs, DOCX, or any URL."/>
+        <meta
+          name="description"
+          content="Instant AI summaries of Terms, Privacy Policies, PDFs, DOCX, or any URL."
+        />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8348042440892802"
+          crossOrigin="anonymous"
+        ></script>
         <link rel="icon" href="/favicon.png" />
       </Head>
 
@@ -86,8 +90,17 @@ export default function Home() {
 
           {/* Header */}
           <header className="text-center mb-8">
-            <Image src="/logo.png" alt="SignMeNot Logo" width={200} height={60} objectFit="contain" className="mx-auto mb-2"/>
-            <p className="text-gray-300 text-sm">AI that helps you understand terms and policies — instantly and clearly.</p>
+            <Image
+              src="/logo.png"
+              alt="SignMeNot Logo"
+              width={200}
+              height={60}
+              objectFit="contain"
+              className="mx-auto mb-2"
+            />
+            <p className="text-gray-300 text-sm">
+              AI that helps you understand terms and policies — instantly and clearly.
+            </p>
           </header>
 
           {/* Form */}
@@ -95,20 +108,23 @@ export default function Home() {
             <textarea
               name="input"
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value)}
               placeholder="Paste text or enter a URL..."
               className="w-full h-40 rounded-xl p-4 bg-slate-700 text-white border border-slate-600 focus:ring-2 focus:ring-blue-500"
             />
 
             <div className="flex flex-col items-center">
-              <label htmlFor="file-upload" className="cursor-pointer inline-flex items-center px-6 py-3 bg-black text-white rounded-lg shadow hover:bg-gray-900">
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer inline-flex items-center px-6 py-3 bg-black text-white rounded-lg shadow hover:bg-gray-900"
+              >
                 📁 Upload PDF or DOCX
               </label>
               <input
                 id="file-upload"
                 type="file"
                 accept=".pdf,.docx"
-                onChange={e => setFile(e.target.files[0])}
+                onChange={(e) => setFile(e.target.files[0])}
                 className="hidden"
               />
             </div>
@@ -124,15 +140,24 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Ad Overlay */}
-          {showAd && <InterstitialAd onFinish={onAdFinish}/>}
-
-          {/* Summary */}
+          {/* Summary & inline ad */}
           {summary && (
-            <section className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-gray-200">
-              <h3 className="text-blue-400 font-semibold mb-2">AI Summary:</h3>
-              <p className="whitespace-pre-wrap leading-relaxed">{summary}</p>
-            </section>
+            <>
+              <section className="mt-8 bg-slate-700 rounded-xl p-6 text-sm text-gray-200">
+                <h3 className="text-blue-400 font-semibold mb-2">AI Summary:</h3>
+                <p className="whitespace-pre-wrap leading-relaxed">{summary}</p>
+              </section>
+
+              {/* Inline AdSense responsive ad */}
+              <ins
+                className="adsbygoogle block mx-auto my-6"
+                style={{ display: 'block' }}
+                data-ad-client="ca-pub-8348042440892802"
+                data-ad-slot="6731374319"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              ></ins>
+            </>
           )}
 
           {/* FAQ & Footer */}
@@ -148,7 +173,7 @@ export default function Home() {
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500 border-t border-slate-600 pt-4">
-            © {new Date().getFullYear()} SignMeNot. 
+            © {new Date().getFullYear()} SignMeNot.
             <a href="/terms" className="ml-2 underline">Terms</a>
             <a href="/privacy" className="ml-2 underline">Privacy</a>
             <a href="mailto:support@signmenot.com" className="ml-2 underline">Contact</a>

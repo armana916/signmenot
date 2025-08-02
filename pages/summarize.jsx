@@ -1,26 +1,23 @@
 // pages/summarize.jsx
+
 import { useState } from 'react'
-import InterstitialAd from '../components/InterstitialAd'
 
 export default function SummarizePage() {
-  const [showAd, setShowAd] = useState(false)
   const [text, setText] = useState('')
   const [summary, setSummary] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSummarizeClick = () => {
+  const handleSummarizeClick = async () => {
     if (!text.trim()) {
-      setError('Please paste your text or upload a file first.')
+      setError('Please paste your text first.')
       return
     }
-    setError('')
-    setShowAd(true)
-  }
 
-  const onAdFinish = async () => {
-    setShowAd(false)
+    setError('')
     setLoading(true)
+    setSummary('')
+
     try {
       const res = await fetch('/api/summarize', {
         method: 'POST',
@@ -32,7 +29,6 @@ export default function SummarizePage() {
       setSummary(data.summary)
     } catch (e) {
       console.error(e)
-      setSummary('')
       setError('Failed to generate summary. Please try again.')
     } finally {
       setLoading(false)
@@ -54,13 +50,11 @@ export default function SummarizePage() {
 
       <button
         onClick={handleSummarizeClick}
-        className="mt-4 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        className="mt-4 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
         disabled={loading}
       >
         {loading ? 'Working…' : 'Summarize'}
       </button>
-
-      {showAd && <InterstitialAd onFinish={onAdFinish} />}
 
       {summary && (
         <section className="mt-6 p-4 bg-gray-100 rounded">
@@ -69,5 +63,5 @@ export default function SummarizePage() {
         </section>
       )}
     </div>
-  )
+)
 }
